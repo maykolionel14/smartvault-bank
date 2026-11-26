@@ -1,0 +1,78 @@
+name: smartvault-java-four-demo
+x-app-env: &app-env
+  DB_URL: jdbc:postgresql://postgres:5432/smartvault
+  DB_USER: ${DB_USER}
+  DB_PASSWORD: ${DB_PASSWORD}
+  JWT_SECRET: ${JWT_SECRET}
+  SERVICE_KEY: ${SERVICE_KEY}
+  IDENTITY_URL: http://identity:8081
+  LEDGER_URL: http://ledger:8082
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: smartvault
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_java_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d smartvault"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  identity:
+    build:
+      context: .
+      args: {SERVICE: identity-service}
+    environment:
+      <<: *app-env
+      RESTRICT_REGISTRATION: ${RESTRICT_REGISTRATION:-true}
+      DEMO_ALLOWED_EMAILS: ${DEMO_ALLOWED_EMAILS:-}
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: unless-stopped
+  ledger:
+    build:
+      context: .
+      args: {SERVICE: ledger-service}
+    environment: *app-env
+    depends_on:
+      postgres: {condition: service_healthy}
+      identity: {condition: service_started}
+    restart: unless-stopped
+  reports:
+    build:
+      context: .
+      args: {SERVICE: reports-service}
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_KEY: ${SERVICE_KEY}
+      IDENTITY_URL: http://identity:8081
+      LEDGER_URL: http://ledger:8082
+    depends_on:
+      identity: {condition: service_started}
+      ledger: {condition: service_started}
+    restart: unless-stopped
+  vaults:
+    build:
+      context: .
+      args: {SERVICE: vaults-service}
+    environment:
+      <<: *app-env
+    depends_on:
+      postgres: {condition: service_healthy}
+      identity: {condition: service_started}
+      ledger: {condition: service_started}
+    restart: unless-stopped
+  web:
+    image: nginx:1.27-alpine
+    ports: ["127.0.0.1:${WEB_PORT:-8080}:80"]
+    depends_on: [identity, ledger, vaults, reports]
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    restart: unless-stopped
+volumes:
+  postgres_java_data:

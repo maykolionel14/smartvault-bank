@@ -1,0 +1,141 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "identity": {
+      "root": ".",
+      "entrypoint": "Dockerfile.identity",
+      "runtime": "container"
+    },
+    "ledger": {
+      "root": ".",
+      "entrypoint": "Dockerfile.ledger",
+      "runtime": "container",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "identity",
+          "format": "url",
+          "env": "IDENTITY_URL"
+        }
+      ]
+    },
+    "vaults": {
+      "root": ".",
+      "entrypoint": "Dockerfile.vaults",
+      "runtime": "container",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "identity",
+          "format": "url",
+          "env": "IDENTITY_URL"
+        },
+        {
+          "type": "service",
+          "service": "ledger",
+          "format": "url",
+          "env": "LEDGER_URL"
+        }
+      ]
+    },
+    "web": {
+      "root": "frontend",
+      "entrypoint": "Dockerfile",
+      "runtime": "container"
+    },
+    "reports": {
+      "root": ".",
+      "entrypoint": "Dockerfile.reports",
+      "runtime": "container",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "identity",
+          "format": "url",
+          "env": "IDENTITY_URL"
+        },
+        {
+          "type": "service",
+          "service": "ledger",
+          "format": "url",
+          "env": "LEDGER_URL"
+        }
+      ]
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/v1/identity",
+      "destination": {
+        "service": "identity"
+      }
+    },
+    {
+      "source": "/api/v1/identity/(.*)",
+      "destination": {
+        "service": "identity"
+      }
+    },
+    {
+      "source": "/api/v1/ledger",
+      "destination": {
+        "service": "ledger"
+      }
+    },
+    {
+      "source": "/api/v1/ledger/(.*)",
+      "destination": {
+        "service": "ledger"
+      }
+    },
+    {
+      "source": "/api/v1/vaults",
+      "destination": {
+        "service": "vaults"
+      }
+    },
+    {
+      "source": "/api/v1/vaults/(.*)",
+      "destination": {
+        "service": "vaults"
+      }
+    },
+    {
+      "source": "/api/v1/reports",
+      "destination": {
+        "service": "reports"
+      }
+    },
+    {
+      "source": "/api/v1/reports/(.*)",
+      "destination": {
+        "service": "reports"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}

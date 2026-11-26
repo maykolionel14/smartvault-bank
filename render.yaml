@@ -1,0 +1,96 @@
+# Blueprint de Render para SmartVault Bank
+databases:
+  - name: smartvault-db
+    databaseName: smartvault
+    user: smartvault
+    plan: free
+    region: oregon
+
+envVarGroups:
+  - name: smartvault-secrets
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SERVICE_KEY
+        generateValue: true
+  - name: smartvault-db
+    envVars:
+      - key: DB_URL        # jdbc:postgresql://<host-interno>:5432/smartvault
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+services:
+  - type: pserv
+    name: smartvault-identity
+    runtime: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./Dockerfile.identity
+    dockerContext: .
+    envVars:
+      - fromGroup: smartvault-secrets
+      - fromGroup: smartvault-db
+      - {key: PORT, value: "10000"}
+      - {key: JAVA_TOOL_OPTIONS, value: "-Xmx300m -XX:+UseSerialGC"}
+      - {key: RESTRICT_REGISTRATION, value: "true"}
+      - {key: DEMO_ALLOWED_EMAILS, sync: false}
+
+  - type: pserv
+    name: smartvault-ledger
+    runtime: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./Dockerfile.ledger
+    dockerContext: .
+    envVars:
+      - fromGroup: smartvault-secrets
+      - fromGroup: smartvault-db
+      - {key: PORT, value: "10000"}
+      - {key: JAVA_TOOL_OPTIONS, value: "-Xmx300m -XX:+UseSerialGC"}
+      - {key: IDENTITY_URL, value: "http://smartvault-identity:10000"}
+
+  - type: pserv
+    name: smartvault-vaults
+    runtime: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./Dockerfile.vaults
+    dockerContext: .
+    envVars:
+      - fromGroup: smartvault-secrets
+      - fromGroup: smartvault-db
+      - {key: PORT, value: "10000"}
+      - {key: JAVA_TOOL_OPTIONS, value: "-Xmx300m -XX:+UseSerialGC"}
+      - {key: IDENTITY_URL, value: "http://smartvault-identity:10000"}
+      - {key: LEDGER_URL, value: "http://smartvault-ledger:10000"}
+
+  - type: pserv
+    name: smartvault-reports
+    runtime: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./Dockerfile.reports
+    dockerContext: .
+    envVars:
+      - fromGroup: smartvault-secrets
+      - {key: PORT, value: "10000"}
+      - {key: JAVA_TOOL_OPTIONS, value: "-Xmx300m -XX:+UseSerialGC"}
+      - {key: IDENTITY_URL, value: "http://smartvault-identity:10000"}
+      - {key: LEDGER_URL, value: "http://smartvault-ledger:10000"}
+
+  - type: web
+    name: smartvault-web
+    runtime: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./Dockerfile.gateway
+    dockerContext: .
+    envVars:
+      - {key: PORT, value: "10000"}
+      - {key: IDENTITY_HOST, value: "smartvault-identity:10000"}
+      - {key: LEDGER_HOST, value: "smartvault-ledger:10000"}
+      - {key: VAULTS_HOST, value: "smartvault-vaults:10000"}
+      - {key: REPORTS_HOST, value: "smartvault-reports:10000"}

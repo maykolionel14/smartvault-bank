@@ -1,0 +1,25 @@
+name: Java 21 - unit tests, architecture and QA
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Unit tests, architecture and coverage
+        run: mvn -B -ntp clean verify
+      - name: Real integration, load, stress and recovery (isolated Docker)
+        run: python3 verification/run_qa.py
+      - name: Publish actual reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-evidence
+          path: |
+            **/target/site/jacoco/**
+            **/target/surefire-reports/**
+            evidencias/**

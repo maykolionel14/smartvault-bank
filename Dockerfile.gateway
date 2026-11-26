@@ -1,0 +1,3 @@
+FROM nginx:1.29-alpine
+COPY frontend/index.html frontend/app.js frontend/styles.css /usr/share/nginx/html/
+COPY nginx/render.conf.template /etc/nginx/templates/default.conf.template

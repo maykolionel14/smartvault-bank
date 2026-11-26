@@ -1,0 +1,17 @@
+.env
+.idea/
+.vscode/
+**/target/
+**/.settings/
+**/.classpath
+**/.project
+*.log
+.DS_Store
+
+.vercel/
+.env.*
+!.env.example
+
+__pycache__/
+*.pyc
+evidencias/smartvault-qa-*/

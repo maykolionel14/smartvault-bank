@@ -1,0 +1,27 @@
+SMARTVAULT BANK — VALIDACIÓN DE LA ENTREGA
+
+openjdk version "21.0.12.1" 2026-08-18
+OpenJDK Runtime Environment (build 21.0.12.1+1-1-deb13u1-Debian)
+OpenJDK 64-Bit Server VM (build 21.0.12.1+1-1-deb13u1-Debian, mixed mode, sharing)
+
+PASS Identity: registration and session revocation
+PASS Ledger: actor-scoped idempotency
+PASS Ledger: insufficient funds
+PASS Vaults: quorum, contribution replay and audit
+PASS Reports: totals, signs and filtering
+PASS Reports: empty and invalid entries
+PASS Reports: dependency recovery
+PASS Reports: CSV
+PASS Platform: signed tokens and service key
+PASS 9 independent pure-Java scenarios
+
+PASS sintaxis JavaScript
+PASS sintaxis scripts Python
+PASS XML Maven: 7 POM
+PASS YAML Compose, Spring y CI
+PASS cuatro servicios, bindings, proxy y Dockerfiles
+PASS regla de dependencias internas ( 23  clases Java )
+PASS ausencia de referencias ejecutables al servicio retirado
+Casos JUnit declarados (NO ejecutados): 47
+
+NO EJECUTADO: Maven/Spring Boot/JUnit/Mockito/JaCoCo, Docker/PostgreSQL y carga/estrés/recuperación real. Maven y Docker no instalados; repositorio Maven inaccesible.

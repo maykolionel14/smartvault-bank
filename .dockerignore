@@ -1,0 +1,13 @@
+.git
+.env
+**/target
+.idea
+.vscode
+*.zip
+*.pdf
+
+.env.*
+.vercel
+
+**/__pycache__
+evidencias
